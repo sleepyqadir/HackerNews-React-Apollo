@@ -3,12 +3,15 @@ import ReactDOM from "react-dom";
 import "./Styles/index.css";
 import App from "./Components/App";
 import * as serviceWorker from "./serviceWorker";
-import { ApolloClient, InMemoryCache, gql } from "apollo-boost";
+import { ApolloClient, InMemoryCache, gql, split } from "apollo-boost";
 import { ApolloProvider } from "react-apollo";
 import { createHttpLink } from "apollo-link-http";
 import { BrowserRouter as Router } from "react-router-dom";
 import { setContext } from "apollo-link-context";
 import { AUTH_TOKEN } from "./constants";
+import { WebSocketLink } from "apollo-link-ws";
+import { getMainDefinition } from "apollo-utilities";
+
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem(AUTH_TOKEN);
   return {
@@ -22,9 +25,27 @@ const authLink = setContext((_, { headers }) => {
 const httpLink = createHttpLink({
   uri: "http://localhost:4000",
 });
+const wsLink = new WebSocketLink({
+  uri: `ws://localhost:4000`,
+  options: {
+    reconnect: true,
+    connectionParams: {
+      authToken: localStorage.getItem(AUTH_TOKEN),
+    },
+  },
+});
+
+const link = split(
+  ({ query }) => {
+    const { kind, operation } = getMainDefinition(query);
+    return kind === "OperationDefinition" && operation === "subscription";
+  },
+  wsLink,
+  authLink.concat(httpLink)
+);
 
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link,
   cache: new InMemoryCache(),
 });
 ReactDOM.render(
