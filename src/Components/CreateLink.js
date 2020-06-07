@@ -1,7 +1,7 @@
-import React, { Component } from "react";
 import { gql } from "apollo-boost";
+import React, { Component } from "react";
 import { Mutation } from "react-apollo";
-
+import { Feed_Query } from "./LinkList";
 class CreateLink extends Component {
   state = {
     description: "",
@@ -42,6 +42,16 @@ class CreateLink extends Component {
           mutation={POST_MUTATION}
           variables={{ description, url }}
           onCompleted={() => this.props.history.push("/")}
+          update={(store, { data: { post } }) => {
+            const data = store.readQuery({
+              query: Feed_Query,
+            });
+            data.feed.links.unshift(post);
+            store.writeQuery({
+              query: Feed_Query,
+              data,
+            });
+          }}
         >
           {(postMutation) => <button onClick={postMutation}>Submit</button>}
         </Mutation>
