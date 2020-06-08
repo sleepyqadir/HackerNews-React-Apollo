@@ -18,7 +18,8 @@ class Login extends Component {
   };
 
   _saveUserData = (token) => {
-    localStorage.setItem(AUTH_TOKEN, token);
+    console.log(token);
+    document.cookie = `${AUTH_TOKEN}=` + token;
   };
   render() {
     const { login, email, password, name } = this.state;
@@ -29,9 +30,8 @@ class Login extends Component {
         $password: String!
         $name: String!
       ) {
-        signup(email:$email,password:$password,name:$name)
-        {
-            token
+        signup(email: $email, password: $password, name: $name) {
+          token
         }
       }
     `;

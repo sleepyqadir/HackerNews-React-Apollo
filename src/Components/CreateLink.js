@@ -2,6 +2,7 @@ import { gql } from "apollo-boost";
 import React, { Component } from "react";
 import { Mutation } from "react-apollo";
 import { Feed_Query } from "./LinkList";
+import { LINKS_PER_PAGE } from "../constants";
 class CreateLink extends Component {
   state = {
     description: "",
@@ -43,13 +44,26 @@ class CreateLink extends Component {
           variables={{ description, url }}
           onCompleted={() => this.props.history.push("/")}
           update={(store, { data: { post } }) => {
+            const first = LINKS_PER_PAGE;
+            const skip = 0;
+            const orderBy = "createdAt_DESC";
             const data = store.readQuery({
               query: Feed_Query,
+              variables: {
+                first,
+                skip,
+                orderBy,
+              },
             });
             data.feed.links.unshift(post);
             store.writeQuery({
               query: Feed_Query,
               data,
+              variables: {
+                first,
+                skip,
+                orderBy,
+              },
             });
           }}
         >
